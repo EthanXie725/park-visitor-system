@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { CustomTabBarItem } from './types'
-import { getI18nText } from './i18n'
 import { tabbarStore } from './store'
 
 defineProps<{
@@ -34,7 +33,7 @@ function getImageByIndex(index: number, item: CustomTabBarItem) {
       <image :src="getImageByIndex(index, item)" mode="scaleToFill" :class="isBulge ? 'h-80px w-80px' : 'h-24px w-24px'" />
     </template>
     <view v-if="!isBulge" class="mt-2px text-12px">
-      {{ getI18nText(item.text) }}
+      {{ item.text }}
     </view>
     <!-- 角标显示 -->
     <view v-if="item.badge">

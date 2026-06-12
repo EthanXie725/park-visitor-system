@@ -1,7 +1,9 @@
+/* eslint-disable style/indent */
 import type { PageMetaDatum, SubPackages } from '@uni-helper/vite-plugin-uni-pages'
+/** 如果是运行抖音小程序，就不引入 @uni-helper/uni-env，否则运行报错（找不到process) */
 import { isMpWeixin } from '@uni-helper/uni-env'
+
 import { pages, subPackages } from '@/pages.json'
-import { isPageTabbar } from '@/tabbar/store'
 
 export type PageInstance = Page.PageInstance<AnyObject, object> & { $page: Page.PageInstance<AnyObject, object> & { fullPath: string } }
 
@@ -84,19 +86,18 @@ export function getAllPages(key?: string) {
 
   // 这里处理分包
   const subPages: PageMetaDatum[] = []
-  ;(subPackages as SubPackages).forEach((subPageObj) => {
-    // console.log(subPageObj)
-    const { root } = subPageObj
-
-    subPageObj.pages
-      .filter(page => !key || page[key])
-      .forEach((page) => {
-        subPages.push({
-          ...page,
-          path: `/${root}/${page.path}`,
+    ; (subPackages as SubPackages).forEach((subPageObj) => {
+      // console.log(subPageObj)
+      const { root } = subPageObj
+      subPageObj.pages
+        .filter(page => !key || page[key])
+        .forEach((page) => {
+          subPages.push({
+            ...page,
+            path: `/${root}/${page.path}`,
+          })
         })
-      })
-  })
+    })
   const result = [...mainPages, ...subPages]
   // console.log(`getAllPages by ${key} result: `, result)
   return result
@@ -104,64 +105,35 @@ export function getAllPages(key?: string) {
 
 export function getCurrentPageI18nKey() {
   const routeObj = currRoute()
-
-  let currPage = (pages as PageMetaDatum[]).find(page => `/${page.path}` === routeObj.path)
+  const currPage = (pages as PageMetaDatum[]).find(page => `/${page.path}` === routeObj.path)
   if (!currPage) {
-    // 在主包中找不到对应的页面，则在分包中找
-    const allSubPages: PageMetaDatum[] = []
-    subPackages?.forEach((config) => {
-      config.pages?.forEach((cur) => {
-        allSubPages.push({
-          ...cur,
-          path: `/${config.root}/${cur.path}`,
-        })
-      })
-    })
-    currPage = allSubPages.find(page => page.path === routeObj.path)
-    if (!currPage) {
-      console.warn('路由不正确')
-      return ''
-    }
+    console.warn('路由不正确')
+    return ''
   }
   console.log(currPage)
   console.log(currPage.style.navigationBarTitleText)
   return currPage.style?.navigationBarTitleText || ''
 }
 
-export function isCurrentPageTabbar() {
-  const { path } = currRoute()
-  return isPageTabbar(path)
-}
-
 /**
  * 根据微信小程序当前环境，判断应该获取的 baseUrl
  */
 export function getEnvBaseUrl() {
-  // 请求基准地址
+  // 默认请求地址。微信小程序如果没有配置专用地址，也会回退到这个地址。
   let baseUrl = import.meta.env.VITE_SERVER_BASEURL
-
-  // # 有些同学可能需要在微信小程序里面根据 develop、trial、release 分别设置上传地址，参考代码如下。
-  const VITE_SERVER_BASEURL__WEIXIN_DEVELOP = 'https://ukw0y1.laf.run'
-  const VITE_SERVER_BASEURL__WEIXIN_TRIAL = 'https://ukw0y1.laf.run'
-  const VITE_SERVER_BASEURL__WEIXIN_RELEASE = 'https://ukw0y1.laf.run'
 
   // 微信小程序端环境区分
   if (isMpWeixin) {
     const {
       miniProgram: { envVersion },
     } = uni.getAccountInfoSync()
-
-    switch (envVersion) {
-      case 'develop':
-        baseUrl = VITE_SERVER_BASEURL__WEIXIN_DEVELOP || baseUrl
-        break
-      case 'trial':
-        baseUrl = VITE_SERVER_BASEURL__WEIXIN_TRIAL || baseUrl
-        break
-      case 'release':
-        baseUrl = VITE_SERVER_BASEURL__WEIXIN_RELEASE || baseUrl
-        break
+    const weixinBaseUrlMap: Record<string, string | undefined> = {
+      develop: import.meta.env.VITE_SERVER_BASEURL__WEIXIN_DEVELOP,
+      trial: import.meta.env.VITE_SERVER_BASEURL__WEIXIN_TRIAL,
+      release: import.meta.env.VITE_SERVER_BASEURL__WEIXIN_RELEASE,
     }
+
+    baseUrl = weixinBaseUrlMap[envVersion] || baseUrl
   }
 
   return baseUrl

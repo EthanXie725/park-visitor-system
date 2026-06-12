@@ -1,7 +1,6 @@
 <script setup lang="ts">
 // i-carbon-code
 import { customTabbarEnable, needHideNativeTabbar, tabbarCacheEnable } from './config'
-import { setTabbarItem } from './i18n'
 import { tabbarList, tabbarStore } from './store'
 import TabbarItem from './TabbarItem.vue'
 
@@ -23,8 +22,8 @@ function handleClickBulge() {
 }
 
 function handleClick(index: number) {
-  // 点击原来的不做操作
-  if (index === tabbarStore.curIdx) {
+  // 当前高亮和真实页面都已经是目标 tab 时，不重复跳转
+  if (index === tabbarStore.curIdx && tabbarStore.isCurrentRouteTabbarItem(index)) {
     return
   }
   const list = tabbarList.value
@@ -36,12 +35,27 @@ function handleClick(index: number) {
     return
   }
   const url = list[index].pagePath
+  const prevIdx = tabbarStore.curIdx
   tabbarStore.setCurIdx(index)
+  const syncTabbarAfterNavigation = () => {
+    tabbarStore.syncCurIdxByCurrentPageAsync()
+  }
+  const restoreTabbarWhenNavigationFailed = () => {
+    tabbarStore.setCurIdx(prevIdx)
+  }
   if (tabbarCacheEnable) {
-    uni.switchTab({ url })
+    uni.switchTab({
+      url,
+      success: syncTabbarAfterNavigation,
+      fail: restoreTabbarWhenNavigationFailed,
+    })
   }
   else {
-    uni.navigateTo({ url })
+    uni.navigateTo({
+      url,
+      success: syncTabbarAfterNavigation,
+      fail: restoreTabbarWhenNavigationFailed,
+    })
   }
 }
 // #ifndef MP-WEIXIN || MP-ALIPAY
@@ -79,11 +93,6 @@ const inactiveColor = '#666'
 function getColorByIndex(index: number) {
   return tabbarStore.curIdx === index ? activeColor : inactiveColor
 }
-
-// 注意，上面处理的是自定义tabbar，下面处理的是原生tabbar，参考：https://unibest.tech/base/10-i18n
-onShow(() => {
-  setTabbarItem()
-})
 </script>
 
 <template>

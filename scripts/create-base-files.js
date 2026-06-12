@@ -14,7 +14,7 @@ const manifest = { }
 const pages = {
   pages: [
     {
-      path: 'pages/index/index',
+      path: 'pages/home/index',
       type: 'home',
       style: {
         navigationStyle: 'custom',
@@ -22,9 +22,24 @@ const pages = {
       },
     },
     {
-      path: 'pages/me/me',
+      path: 'pages/pass/index',
       type: 'page',
       style: {
+        navigationBarTitleText: '通行证',
+      },
+    },
+    {
+      path: 'pages/records/index',
+      type: 'page',
+      style: {
+        navigationBarTitleText: '预约记录',
+      },
+    },
+    {
+      path: 'pages/me/index',
+      type: 'page',
+      style: {
+        navigationStyle: 'custom',
         navigationBarTitleText: '我的',
       },
     },
